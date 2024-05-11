@@ -96,10 +96,7 @@ func main() {
 		},
 	)
 	if err != nil {
-		logger.Warn("error quering ntp server",
-			"error", err,
-		)
-		os.Exit(1)
+		panic(fmt.Errorf("ntp.QueryWithOptions error: %w", err))
 	}
 
 	logger.Info("server response",
