@@ -102,10 +102,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	rttMilliseconds := response.RTT.Milliseconds()
-
 	logger.Info("server response",
 		"response", response,
-		"rttMilliseconds", rttMilliseconds,
+		"rootDispersionMicroseconds", response.RootDispersion.Microseconds(),
+		"rootDistanceMicroseconds", response.RootDistance.Microseconds(),
+		"rttMicroseconds", response.RTT.Microseconds(),
 	)
 }
