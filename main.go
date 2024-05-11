@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"net"
 	"os"
 
 	"github.com/beevik/ntp"
@@ -33,6 +34,29 @@ func setupSlog() {
 	)
 }
 
+func dialer(localAddress, remoteAddress string) (net.Conn, error) {
+	var laddr *net.UDPAddr
+	if localAddress != "" {
+		var err error
+		laddr, err = net.ResolveUDPAddr("udp", net.JoinHostPort(localAddress, "0"))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	raddr, err := net.ResolveUDPAddr("udp", remoteAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	slog.Info("dialing",
+		"laddr", laddr,
+		"raddr", raddr,
+	)
+
+	return net.DialUDP("udp", laddr, raddr)
+}
+
 func main() {
 	defer func() {
 		if err := recover(); err != nil {
@@ -57,7 +81,12 @@ func main() {
 		"ntpServer", ntpServer,
 	)
 
-	response, err := ntp.Query(ntpServer)
+	response, err := ntp.QueryWithOptions(
+		ntpServer,
+		ntp.QueryOptions{
+			Dialer: dialer,
+		},
+	)
 	if err != nil {
 		logger.Warn("error quering ntp server",
 			"error", err,
