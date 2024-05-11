@@ -34,27 +34,30 @@ func setupSlog() {
 	)
 }
 
+var network string
+
 func dialer(localAddress, remoteAddress string) (net.Conn, error) {
 	var laddr *net.UDPAddr
 	if localAddress != "" {
 		var err error
-		laddr, err = net.ResolveUDPAddr("udp", net.JoinHostPort(localAddress, "0"))
+		laddr, err = net.ResolveUDPAddr(network, net.JoinHostPort(localAddress, "0"))
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	raddr, err := net.ResolveUDPAddr("udp", remoteAddress)
+	raddr, err := net.ResolveUDPAddr(network, remoteAddress)
 	if err != nil {
 		return nil, err
 	}
 
 	slog.Info("dialing",
+		"network", network,
 		"laddr", laddr,
 		"raddr", raddr,
 	)
 
-	return net.DialUDP("udp", laddr, raddr)
+	return net.DialUDP(network, laddr, raddr)
 }
 
 func main() {
@@ -69,11 +72,12 @@ func main() {
 
 	setupSlog()
 
-	if len(os.Args) != 2 {
-		panic("ntp server required as command line arument")
+	if len(os.Args) != 3 {
+		panic("usage: go-ntp-client [network] [server]")
 	}
 
-	ntpServer := os.Args[1]
+	network = os.Args[1]
+	ntpServer := os.Args[2]
 
 	logger := slog.Default()
 
