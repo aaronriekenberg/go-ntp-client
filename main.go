@@ -75,7 +75,7 @@ func main() {
 
 	logger := slog.Default()
 
-	network = flag.String("network", "udp", "network to use")
+	network = flag.String("network", "udp6", "network to use")
 
 	flag.Parse()
 
