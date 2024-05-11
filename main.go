@@ -104,6 +104,8 @@ func main() {
 
 	logger.Info("server response",
 		"response", response,
+		"clockOffset", response.ClockOffset.String(),
+		"precision", response.Precision.String(),
 		"rootDispersion", response.RootDispersion.String(),
 		"rootDistance", response.RootDistance.String(),
 		"rtt", response.RTT.String(),
