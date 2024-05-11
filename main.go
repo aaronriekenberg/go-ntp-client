@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log/slog"
 	"net"
@@ -34,19 +35,19 @@ func setupSlog() {
 	)
 }
 
-var network string
+var network *string
 
 func dialer(localAddress, remoteAddress string) (net.Conn, error) {
 	var laddr *net.UDPAddr
 	if localAddress != "" {
 		var err error
-		laddr, err = net.ResolveUDPAddr(network, net.JoinHostPort(localAddress, "0"))
+		laddr, err = net.ResolveUDPAddr(*network, net.JoinHostPort(localAddress, "0"))
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	raddr, err := net.ResolveUDPAddr(network, remoteAddress)
+	raddr, err := net.ResolveUDPAddr(*network, remoteAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +58,7 @@ func dialer(localAddress, remoteAddress string) (net.Conn, error) {
 		"raddr", raddr,
 	)
 
-	return net.DialUDP(network, laddr, raddr)
+	return net.DialUDP(*network, laddr, raddr)
 }
 
 func main() {
@@ -72,16 +73,19 @@ func main() {
 
 	setupSlog()
 
-	if len(os.Args) != 3 {
-		panic("usage: go-ntp-client [network] [server]")
-	}
-
-	network = os.Args[1]
-	ntpServer := os.Args[2]
-
 	logger := slog.Default()
 
+	network = flag.String("network", "udp", "network to use")
+
+	flag.Parse()
+
+	ntpServer := flag.Arg(0)
+	if len(ntpServer) == 0 {
+		panic("no server specified")
+	}
+
 	logger.Info("quering server",
+		"network", *network,
 		"ntpServer", ntpServer,
 	)
 
