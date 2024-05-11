@@ -106,6 +106,7 @@ func main() {
 		"response", response,
 		"clockOffset", response.ClockOffset.String(),
 		"precision", response.Precision.String(),
+		"rootDelay", response.RootDelay.String(),
 		"rootDispersion", response.RootDispersion.String(),
 		"rootDistance", response.RootDistance.String(),
 		"rtt", response.RTT.String(),
