@@ -10,6 +10,10 @@ import (
 	"github.com/beevik/ntp"
 )
 
+var (
+	network = flag.String("network", "udp6", "network to use")
+)
+
 func setupSlog() {
 	level := slog.LevelInfo
 
@@ -34,8 +38,6 @@ func setupSlog() {
 		"configuredLevel", level,
 	)
 }
-
-var network *string
 
 func dialer(localAddress, remoteAddress string) (net.Conn, error) {
 	var laddr *net.UDPAddr
@@ -73,10 +75,6 @@ func main() {
 
 	setupSlog()
 
-	logger := slog.Default()
-
-	network = flag.String("network", "udp6", "network to use")
-
 	flag.Parse()
 
 	ntpServer := flag.Arg(0)
@@ -84,7 +82,7 @@ func main() {
 		panic("no server specified")
 	}
 
-	logger.Info("quering server",
+	slog.Info("quering server",
 		"network", *network,
 		"ntpServer", ntpServer,
 	)
@@ -99,7 +97,7 @@ func main() {
 		panic(fmt.Errorf("ntp.QueryWithOptions error: %w", err))
 	}
 
-	logger.Info("server response",
+	slog.Info("server response",
 		"response", response,
 		"clockOffset", response.ClockOffset.String(),
 		"precision", response.Precision.String(),
