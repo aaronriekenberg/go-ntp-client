@@ -77,10 +77,11 @@ func main() {
 
 	flag.Parse()
 
-	ntpServer := flag.Arg(0)
-	if len(ntpServer) == 0 {
+	if flag.NArg() == 0 {
 		panic("no server specified")
 	}
+
+	ntpServer := flag.Arg(0)
 
 	slog.Info("quering server",
 		"network", *network,
