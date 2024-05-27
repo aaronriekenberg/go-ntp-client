@@ -11,31 +11,37 @@ import (
 )
 
 var (
-	network = flag.String("network", "udp6", "network to use")
+	network   = flag.String("network", "udp6", "network to use")
+	sloglevel slog.Level
 )
 
-func setupSlog() {
-	level := slog.LevelInfo
+func parseFlags() (ntpServers []string) {
+	flag.TextVar(&sloglevel, "sloglevel", slog.LevelInfo, "slog level")
 
-	if levelString, ok := os.LookupEnv("LOG_LEVEL"); ok {
-		err := level.UnmarshalText([]byte(levelString))
-		if err != nil {
-			panic(fmt.Errorf("level.UnmarshalText error %w", err))
-		}
+	flag.Parse()
+
+	if flag.NArg() == 0 {
+		panic("no ntp server specified")
 	}
 
+	ntpServers = flag.Args()
+	return
+}
+
+func setupSlog() {
 	slog.SetDefault(
 		slog.New(
 			slog.NewJSONHandler(
-				os.Stdout, &slog.HandlerOptions{
-					Level: level,
+				os.Stdout,
+				&slog.HandlerOptions{
+					Level: sloglevel,
 				},
 			),
 		),
 	)
 
 	slog.Info("setupSlog",
-		"configuredLevel", level,
+		"sloglevel", sloglevel,
 	)
 }
 
@@ -73,38 +79,35 @@ func main() {
 		}
 	}()
 
+	ntpServers := parseFlags()
+
 	setupSlog()
 
-	flag.Parse()
+	for _, ntpServer := range ntpServers {
+		slog.Info("quering server",
+			"network", *network,
+			"ntpServer", ntpServer,
+		)
 
-	if flag.NArg() == 0 {
-		panic("no server specified")
+		response, err := ntp.QueryWithOptions(
+			ntpServer,
+			ntp.QueryOptions{
+				Dialer: dialer,
+			},
+		)
+
+		if err != nil {
+			panic(fmt.Errorf("ntp.QueryWithOptions error: %w", err))
+		}
+
+		slog.Info("server response",
+			"response", response,
+			"clockOffset", response.ClockOffset.String(),
+			"precision", response.Precision.String(),
+			"rootDelay", response.RootDelay.String(),
+			"rootDispersion", response.RootDispersion.String(),
+			"rootDistance", response.RootDistance.String(),
+			"rtt", response.RTT.String(),
+		)
 	}
-
-	ntpServer := flag.Arg(0)
-
-	slog.Info("quering server",
-		"network", *network,
-		"ntpServer", ntpServer,
-	)
-
-	response, err := ntp.QueryWithOptions(
-		ntpServer,
-		ntp.QueryOptions{
-			Dialer: dialer,
-		},
-	)
-	if err != nil {
-		panic(fmt.Errorf("ntp.QueryWithOptions error: %w", err))
-	}
-
-	slog.Info("server response",
-		"response", response,
-		"clockOffset", response.ClockOffset.String(),
-		"precision", response.Precision.String(),
-		"rootDelay", response.RootDelay.String(),
-		"rootDispersion", response.RootDispersion.String(),
-		"rootDistance", response.RootDistance.String(),
-		"rtt", response.RTT.String(),
-	)
 }
