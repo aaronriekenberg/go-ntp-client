@@ -11,11 +11,12 @@ import (
 )
 
 var (
-	network   = flag.String("network", "udp6", "network to use")
-	sloglevel slog.Level
+	network    = flag.String("network", "udp6", "network to use")
+	sloglevel  slog.Level
+	ntpServers []string
 )
 
-func parseFlags() (ntpServers []string) {
+func parseFlags() {
 	flag.TextVar(&sloglevel, "sloglevel", slog.LevelInfo, "slog level")
 
 	flag.Parse()
@@ -25,7 +26,6 @@ func parseFlags() (ntpServers []string) {
 	}
 
 	ntpServers = flag.Args()
-	return
 }
 
 func setupSlog() {
@@ -79,7 +79,7 @@ func main() {
 		}
 	}()
 
-	ntpServers := parseFlags()
+	parseFlags()
 
 	setupSlog()
 
