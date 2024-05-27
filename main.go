@@ -11,21 +11,14 @@ import (
 )
 
 var (
-	network    = flag.String("network", "udp6", "network to use")
-	sloglevel  slog.Level
-	ntpServers []string
+	network   = flag.String("network", "udp6", "network to use")
+	sloglevel slog.Level
 )
 
 func parseFlags() {
 	flag.TextVar(&sloglevel, "sloglevel", slog.LevelInfo, "slog level")
 
 	flag.Parse()
-
-	if flag.NArg() == 0 {
-		panic("no ntp server specified")
-	}
-
-	ntpServers = flag.Args()
 }
 
 func setupSlog() {
@@ -43,6 +36,14 @@ func setupSlog() {
 	slog.Info("setupSlog",
 		"sloglevel", sloglevel,
 	)
+}
+
+func getNTPServers() []string {
+	if flag.NArg() == 0 {
+		panic("no ntp server specified")
+	}
+
+	return flag.Args()
 }
 
 type dialerFunc = func(localAddress, remoteAddress string) (net.Conn, error)
@@ -87,6 +88,8 @@ func main() {
 	parseFlags()
 
 	setupSlog()
+
+	ntpServers := getNTPServers()
 
 	for _, ntpServer := range ntpServers {
 		logger := slog.Default().With(
