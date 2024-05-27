@@ -45,28 +45,33 @@ func setupSlog() {
 	)
 }
 
-func dialer(localAddress, remoteAddress string) (net.Conn, error) {
-	var laddr *net.UDPAddr
-	if localAddress != "" {
-		var err error
-		laddr, err = net.ResolveUDPAddr(*network, net.JoinHostPort(localAddress, "0"))
+type dialerFunc = func(localAddress, remoteAddress string) (net.Conn, error)
+
+func createDialer(logger *slog.Logger) dialerFunc {
+
+	return func(localAddress, remoteAddress string) (net.Conn, error) {
+		var laddr *net.UDPAddr
+		if localAddress != "" {
+			var err error
+			laddr, err = net.ResolveUDPAddr(*network, net.JoinHostPort(localAddress, "0"))
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		raddr, err := net.ResolveUDPAddr(*network, remoteAddress)
 		if err != nil {
 			return nil, err
 		}
+
+		logger.Info("dialing",
+			"network", network,
+			"laddr", laddr,
+			"raddr", raddr,
+		)
+
+		return net.DialUDP(*network, laddr, raddr)
 	}
-
-	raddr, err := net.ResolveUDPAddr(*network, remoteAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	slog.Info("dialing",
-		"network", network,
-		"laddr", laddr,
-		"raddr", raddr,
-	)
-
-	return net.DialUDP(*network, laddr, raddr)
 }
 
 func main() {
@@ -84,15 +89,17 @@ func main() {
 	setupSlog()
 
 	for _, ntpServer := range ntpServers {
-		slog.Info("quering server",
+		logger := slog.Default().With(
 			"network", *network,
 			"ntpServer", ntpServer,
 		)
 
+		logger.Info("quering server")
+
 		response, err := ntp.QueryWithOptions(
 			ntpServer,
 			ntp.QueryOptions{
-				Dialer: dialer,
+				Dialer: createDialer(logger),
 			},
 		)
 
@@ -100,7 +107,7 @@ func main() {
 			panic(fmt.Errorf("ntp.QueryWithOptions error: %w", err))
 		}
 
-		slog.Info("server response",
+		logger.Info("server response",
 			"response", response,
 			"clockOffset", response.ClockOffset.String(),
 			"precision", response.Precision.String(),
