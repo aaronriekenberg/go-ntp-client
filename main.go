@@ -89,9 +89,7 @@ func main() {
 
 	setupSlog()
 
-	ntpServers := getNTPServers()
-
-	for _, ntpServer := range ntpServers {
+	for _, ntpServer := range getNTPServers() {
 		logger := slog.Default().With(
 			"network", *network,
 			"ntpServer", ntpServer,
