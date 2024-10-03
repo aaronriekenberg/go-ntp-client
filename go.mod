@@ -1,6 +1,6 @@
 module github.com/aaronriekenberg/go-ntp-client
 
-go 1.23.1
+go 1.23.2
 
 require github.com/beevik/ntp v1.4.3
 
