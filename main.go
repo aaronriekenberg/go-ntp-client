@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	network   = flag.String("network", "udp6", "network to use")
+	network   = flag.String("network", "udp", "network to use")
 	sloglevel slog.Level
 )
 
